@@ -9,7 +9,8 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 
 public class ClasificarLibrosPorTema {
-    public static void main(String[] args) throws Exception {
+    public static boolean runJob(String[] args) throws Exception {
+    	try {
         Configuration conf = new Configuration();
         Job job = Job.getInstance(conf, "Clasificar Libros por Tema");
 
@@ -24,14 +25,13 @@ public class ClasificarLibrosPorTema {
         FileInputFormat.addInputPath(job, new Path("/libros"));
         FileOutputFormat.setOutputPath(job, new Path("/biblioteca_temp"));
 
-        System.exit(job.waitForCompletion(true) ? 0 : 1);
+        return job.waitForCompletion(true);
+
+        } catch (Exception e) {
+            System.err.println("Error durante la ejecución del trabajo: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
     }
 
-	public void run() {
-		try {
-			ClasificarLibrosPorTema.main(null);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
 }
