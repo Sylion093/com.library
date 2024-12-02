@@ -8,6 +8,8 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.BufferedReader;
@@ -25,8 +27,9 @@ public class AyudanteDeBiblioteca {
 
     private JFrame frmAyudanteDeBiblioteca;
     private JTextPane tpResultados;
-    private JTextArea taChat;
+    private JTable taChat;
     private JTextField tfMensaje;
+    private DefaultTableModel dtm = new DefaultTableModel(0,0);
 
     private File[] archivosSeleccionados;
 
@@ -77,8 +80,13 @@ public class AyudanteDeBiblioteca {
         // Segunda pestaña: Chat
         JPanel panelChat = new JPanel(new BorderLayout());
 
-        taChat = new JTextArea();
-        taChat.setEditable(false);
+        taChat = new JTable();
+        dtm.addColumn("Mensajes");
+        dtm.addColumn("Descarga");
+        dtm.addColumn("Like");        
+
+        taChat.setModel(dtm);
+        
         panelChat.add(new JScrollPane(taChat), BorderLayout.CENTER);
 
         tfMensaje = new JTextField();
@@ -89,7 +97,11 @@ public class AyudanteDeBiblioteca {
     }
 
     private void logResultado(String mensaje) {
-        tpResultados.setText(tpResultados.getText() + mensaje + "\n");
+        //tpResultados.setText(tpResultados.getText() + mensaje + "\n");
+        dtm.addRow(new Object[] {mensaje,"",""});
+    }
+    private void logRespuesta(String titulo, String Ruta){
+    	dtm.addRow(new Object[] {});
     }
 
     private void seleccionarArchivos() {
@@ -145,7 +157,8 @@ public class AyudanteDeBiblioteca {
     private void enviarMensaje() {
     	String mensaje = tfMensaje.getText();
         String respuesta;
-        taChat.append("Usuario: " + mensaje + "\n");
+        // taChat.append("Usuario: " + mensaje + "\n");
+        
 
         try {
             // Define rutas de entrada y salida en HDFS
@@ -196,7 +209,7 @@ public class AyudanteDeBiblioteca {
                 FileStatus[] status = fs.listStatus(outputDir);
 
                 respuesta = "Tu consulta se encuentra dentro de los libros:\n";
-                taChat.append("Tu consulta se encuentra dentro de los libros:\n");
+                logResultado("Tu consulta se encuentra dentro de los libros:\n");
                 for (FileStatus fileStatus : status) {
                     if (fileStatus.isFile()) {
                         FSDataInputStream inputStream = fs.open(fileStatus.getPath());
@@ -209,7 +222,7 @@ public class AyudanteDeBiblioteca {
                             String snippet = parts[1];
 
                             respuesta += bookTitle + "\n\"" + snippet + "\"\n-----\n";
-                            taChat.append(bookTitle + "\n\"" + snippet + "\"\n-----\n");
+                            // taChat.append(bookTitle + "\n\"" + snippet + "\"\n-----\n");
                         }
 
                         reader.close();
@@ -217,11 +230,11 @@ public class AyudanteDeBiblioteca {
                 }
                 guardarConversacion(mensaje, respuesta);
             } else {
-                taChat.append("Error al ejecutar el trabajo de MapReduce.\n");
+                logResultado("Error al ejecutar el trabajo de MapReduce.\n");
             }
         } catch (Exception e) {
             e.printStackTrace();
-            taChat.append("Error al buscar en los libros.\n");
+            logResultado("Error al buscar en los libros.\n");
         }
 
         tfMensaje.setText("");
